@@ -68,7 +68,7 @@ Write a ${length || "short"} story.
         {
           role: "system",
           content:
-            "You are Loomy, an imaginative storyteller AI that must strictly obey user instructions.",
+            "You are Loomy, an imaginative and creative storyteller AI that must strictly obey user instructions.",
         },
         { role: "user", content: finalPrompt },
       ],
