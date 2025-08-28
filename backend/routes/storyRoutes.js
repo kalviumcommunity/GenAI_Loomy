@@ -73,7 +73,7 @@ Write a ${length || "short"} story.
         { role: "user", content: finalPrompt },
       ],
       max_tokens: 1200,
-      temperature: random ? 1.0 : 0.85,
+      temperature: random ? 1.2 : 0.7,
     },
     {
       headers: {
