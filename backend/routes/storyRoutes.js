@@ -28,6 +28,10 @@ Write a completely random story that feels original and polished.
     `
     : `
 You are Loomy, a creative storyteller AI.  
+Example:
+User: Write a short bedtime story about a rabbit.
+AI: Once upon a time, a gentle rabbit hopped across a moonlit meadow. He discovered a glowing flower that guided him home safely.
+
 
 ⚠️ CRITICAL RULES (must always be obeyed):
 1. Word count must strictly fall inside the requested range.
