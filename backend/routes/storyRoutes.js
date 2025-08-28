@@ -41,15 +41,17 @@ When creating a story:
    Never go under or over. If you fail, REWRITE until correct.  
 
 2. Fully respect the requested genres and styles.
-   - If "horror" → create genuine fear, dread, or unease.  
-   - If "adult" → tone must be mature, serious, and unsettling.  
+   - If "horror" - create genuine fear, dread, or unease.  
+   - If "adult" - tone must be mature, serious, and unsettling.  
      No childish or fairytale narration.  
-   - If "Enid Blyton" style → use clear, simple, direct sentences,  
+   - If "Enid Blyton" style - use clear, simple, direct sentences,  
      but deliver them with a darker, adult tone.  
+   - If "fantasy" - create a rich, immersive world with magical elements and fantastical creatures.
+   - If "Shashi Tharoor" style - use complex jargons, and tough storylines.
 
 3. If user specifies "conversation", make 80%+ of the story dialogue between characters,  
    with minimal narration only for setting the scene.  
-
+ 
 4. If a blurb is provided, its main ideas and keywords must appear clearly in the story.  
 
 5. The story must flow naturally and end with a proper conclusion — not abruptly, not with filler.  
