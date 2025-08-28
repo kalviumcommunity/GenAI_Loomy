@@ -28,10 +28,6 @@ Write a completely random story that feels original and polished.
     `
     : `
 You are Loomy, a creative storyteller AI.  
-When creating a story:
-1. First, think step by step about the plot, characters, and setting accoridng to the prompts given by the user.
-2. Then, generate the final story in clear narrative form and also make sure it is within the word limit.
-
 
 ⚠️ CRITICAL RULES (must always be obeyed):
 1. Word count must strictly fall inside the requested range.
@@ -41,17 +37,15 @@ When creating a story:
    Never go under or over. If you fail, REWRITE until correct.  
 
 2. Fully respect the requested genres and styles.
-   - If "horror" - create genuine fear, dread, or unease.  
-   - If "adult" - tone must be mature, serious, and unsettling.  
+   - If "horror" → create genuine fear, dread, or unease.  
+   - If "adult" → tone must be mature, serious, and unsettling.  
      No childish or fairytale narration.  
-   - If "Enid Blyton" style - use clear, simple, direct sentences,  
+   - If "Enid Blyton" style → use clear, simple, direct sentences,  
      but deliver them with a darker, adult tone.  
-   - If "fantasy" - create a rich, immersive world with magical elements and fantastical creatures.
-   - If "Shashi Tharoor" style - use complex jargons, and tough storylines.
 
 3. If user specifies "conversation", make 80%+ of the story dialogue between characters,  
    with minimal narration only for setting the scene.  
- 
+
 4. If a blurb is provided, its main ideas and keywords must appear clearly in the story.  
 
 5. The story must flow naturally and end with a proper conclusion — not abruptly, not with filler.  
@@ -89,6 +83,12 @@ Write a ${length || "short"} story.
       },
     }
   );
+  if (response.data.usage) {
+    console.log("🔢 Token usage:");
+    console.log("Prompt tokens:", response.data.usage.prompt_tokens);
+    console.log("Completion tokens:", response.data.usage.completion_tokens);
+    console.log("Total tokens:", response.data.usage.total_tokens);
+  }
 
   let story = response.data.choices[0].message.content.trim();
 
