@@ -10,9 +10,12 @@ function cosineSimilarity(vecA, vecB) {
 function dotProduct(vecA, vecB) {
   return vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
 }
+function euclideanDistance(vecA, vecB) {
+  return Math.sqrt(vecA.reduce((sum, a, i) => sum + (a - vecB[i]) ** 2, 0));
+}
 
 
 
 module.exports = {
-  cosineSimilarity,dotProduct
+  cosineSimilarity,dotProduct,euclideanDistance
 };
