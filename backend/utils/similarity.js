@@ -4,10 +4,15 @@ function cosineSimilarity(vecA, vecB) {
   const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
   const magB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
   return dot / (magA * magB);
+
+}
+
+function dotProduct(vecA, vecB) {
+  return vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
 }
 
 
 
 module.exports = {
-  cosineSimilarity
+  cosineSimilarity,dotProduct
 };
