@@ -1,27 +1,40 @@
 // routes/storyRoutes.js
 const express = require("express");
 const axios = require("axios");
+const { buildRandomPrompt, buildNormalPrompt } = require("../utils/promptBuilder");
 
 const router = express.Router();
 
-// 🧠 Loomy generator (zero-shot)
-async function generateStory({ genres, styles, length, blurb, random = false }) {
-  const basePrompt = random
-    ? "Write a random creative story."
-    : `Write a ${length || "short"} story. 
-Genres: ${genres?.length ? genres.join(", ") : "any"} 
-Styles: ${styles?.length ? styles.join(", ") : "any"} 
-Blurb: ${blurb || "Be creative."}`;
+// 🔎 Word counter
+function countWords(text) {
+  return text.trim().split(/\s+/).length;
+}
 
+// 🧠 Loomy generator
+async function generateStory({ genres, styles, length, blurb, random = false, retryPrompt = null }) {
+  let finalPrompt;
+
+  if (random) {
+    finalPrompt = buildRandomPrompt();
+  } else {
+    finalPrompt = retryPrompt || buildNormalPrompt({ genres, styles, length, blurb });
+  }
+
+  // 🔗 Call OpenRouter
   const response = await axios.post(
     "https://openrouter.ai/api/v1/chat/completions",
     {
-      model: "gpt-4o-mini",
+      model: "gpt-4o-mini", 
       messages: [
-        { role: "user", content: basePrompt },
+        {
+          role: "system",
+          content:
+            "You are Loomy, an imaginative and creative storyteller AI that must strictly obey user instructions.",
+        },
+        { role: "user", content: finalPrompt },
       ],
-      max_tokens: 1200,
-      temperature: random ? 1.2 : 0.7,
+      max_tokens: 2000, //
+      temperature: random ? 1.2 : 0.7
     },
     {
       headers: {
@@ -32,35 +45,68 @@ Blurb: ${blurb || "Be creative."}`;
     }
   );
 
-  if (response.data.usage) {
-    console.log("🔢 Token usage:");
-    console.log("Prompt tokens:", response.data.usage.prompt_tokens);
-    console.log("Completion tokens:", response.data.usage.completion_tokens);
-    console.log("Total tokens:", response.data.usage.total_tokens);
+  let storyText = response.data.choices[0].message.content.trim();
+
+  let titleMatch = storyText.match(/Title:\s*(.+)/i);
+  let storyMatch = storyText.match(/Story:\s*([\s\S]+)/i);
+
+  let title = titleMatch ? titleMatch[1].trim() : "Untitled";
+  let story = storyMatch ? storyMatch[1].trim() : storyText;
+
+  console.log("📖 Generated Title:", title);
+  console.log("📝 Generated Story (first 300 chars):", story.slice(0, 300) + "...");
+
+  // ✅ If random, just return directly (no word count checks)
+  if (random) return { title, story };
+
+  // 🔁 Word count enforcement ONLY for non-random
+  const wordCount = countWords(story);
+  let min = 150,
+    max = 200;
+  if (length === "medium") {
+    min = 450;
+    max = 550;
+  } else if (length === "long") {
+    min = 750;
+    max = 850;
   }
 
-  return response.data.choices[0].message.content.trim();
+  if (wordCount < min || wordCount > max) {
+    console.warn(
+      `⚠️ Story length ${wordCount} out of range (${min}-${max}). Retrying...`
+    );
+    return generateStory({
+      genres,
+      styles,
+      length,
+      blurb,
+      random,
+      retryPrompt: `${finalPrompt}\n\nThe previous attempt was ${wordCount} words. Rewrite strictly within ${min}–${max} words.`,
+    });
+  }
+
+  return { title, story };
 }
 
-// 🎯 Normal story route
+//  Normal story route
 router.post("/generate-story", async (req, res) => {
   try {
     const { genres, styles, length, blurb } = req.body;
-    const story = await generateStory({ genres, styles, length, blurb });
-    res.json({ story });
+    const { title, story } = await generateStory({ genres, styles, length, blurb });
+    res.json({ title, story });
   } catch (err) {
-    console.error("Error generating story:", err.response?.data || err.message);
+    console.error("❌ Error generating story:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to generate story" });
   }
 });
 
-// 🎲 Random story route
+//  Random story route
 router.get("/random-story", async (req, res) => {
   try {
-    const story = await generateStory({ random: true });
-    res.json({ story });
+    const { title, story } = await generateStory({ random: true });
+    res.json({ title, story });
   } catch (err) {
-    console.error("Error generating random story:", err.response?.data || err.message);
+    console.error("❌ Error generating random story:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to generate random story" });
   }
 });

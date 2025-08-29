@@ -1,10 +1,12 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
+
 export default function StoryPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const story = location.state?.story;
+  const { title, story } = location.state || {};
+
 
   if (!story) {
     return (
@@ -14,7 +16,7 @@ export default function StoryPage() {
             No story found
           </h2>
           <p className="text-gray-600 mb-6">
-            Looks like you haven’t generated a story yet.
+            Looks like you have not generated a story yet.
           </p>
           <button
             onClick={() => navigate("/")}
@@ -37,7 +39,7 @@ export default function StoryPage() {
       >
         <div className="bg-white shadow-2xl rounded-2xl overflow-hidden p-8">
           <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-            ✨ Your AI Generated Story ✨
+            {title}
           </h1>
 
           <div className="max-h-[60vh] overflow-y-auto pr-2 text-gray-700 leading-relaxed mb-8 whitespace-pre-line">
