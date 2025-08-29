@@ -22,11 +22,6 @@ export default function LandingPage() {
 
   // --- Generate Story ---
   const handleGenerateStory = async () => {
-    if (!selectedGenres.length || !selectedStyles.length || !selectedLength || !ageGroup || !blurb) {
-      alert("Please fill all fields before generating a story!");
-      return;
-    }
-
     const payload = {
       genres: selectedGenres,
       styles: selectedStyles,
@@ -52,7 +47,7 @@ export default function LandingPage() {
       }
 
       // Navigate to StoryPage and pass both the story + inputs
-      navigate("/story", { state: { story: data.story, inputs: payload } });
+      navigate("/story", { state: { title: data.title,story: data.story, inputs: payload } });
     } catch (err) {
       console.error("Error generating story:", err);
       alert("Failed to reach backend.");
@@ -74,7 +69,7 @@ export default function LandingPage() {
         return;
       }
 
-      navigate("/story", { state: { story: data.story, random: true } });
+      navigate("/story", { state: { title: data.title,story: data.story, random: true } });
     } catch (err) {
       console.error("Error generating random story:", err);
     } finally {
