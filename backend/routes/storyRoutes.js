@@ -5,12 +5,12 @@ const { buildRandomPrompt, buildNormalPrompt } = require("../utils/promptBuilder
 
 const router = express.Router();
 
-// 🔎 Word counter
+//  Word counter
 function countWords(text) {
   return text.trim().split(/\s+/).length;
 }
 
-// 🧠 Loomy generator
+//  Loomy generator
 async function generateStory({ genres, styles, length, blurb, random = false, retryPrompt = null }) {
   let finalPrompt;
 
@@ -24,20 +24,19 @@ async function generateStory({ genres, styles, length, blurb, random = false, re
   const response = await axios.post(
     "https://openrouter.ai/api/v1/chat/completions",
     {
-      model: "gpt-4o-mini", 
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content:
-            "You are Loomy, an imaginative and creative storyteller AI that must strictly obey user instructions.",
+          content: "You are Loomy, an imaginative and creative storyteller AI that must strictly obey user instructions.",
         },
         { role: "user", content: finalPrompt },
       ],
-      max_tokens: 2000, //
+      max_tokens: 2000,
       temperature: random ? 1.2 : 0.7,
-       top_p: 0.95,
-       top_k: 40,
-       stopSequences: ["END_OF_RESPONSE", "###"],
+      top_p: 0.95,
+      top_k: 40,
+      stopSequences: ["END_OF_RESPONSE", "###"],
     },
     {
       headers: {
@@ -48,21 +47,27 @@ async function generateStory({ genres, styles, length, blurb, random = false, re
     }
   );
 
-  let storyText = response.data.choices[0].message.content.trim();
+  let rawText = response.data.choices[0].message.content.trim();
 
-  let titleMatch = storyText.match(/Title:\s*(.+)/i);
-  let storyMatch = storyText.match(/Story:\s*([\s\S]+)/i);
+  //  Parse JSON safely
+  let parsed;
+  try {
+    parsed = JSON.parse(rawText);
+  } catch (e) {
+    console.error(" Failed to parse JSON:", rawText);
+    throw new Error("AI did not return valid JSON");
+  }
 
-  let title = titleMatch ? titleMatch[1].trim() : "Untitled";
-  let story = storyMatch ? storyMatch[1].trim() : storyText;
+  const title = parsed.title || "Untitled";
+  const story = parsed.story || "";
 
   console.log("📖 Generated Title:", title);
   console.log("📝 Generated Story (first 300 chars):", story.slice(0, 300) + "...");
 
-  // ✅ If random, just return directly (no word count checks)
+  //  If random, just return directly (no word count checks)
   if (random) return { title, story };
 
-  // 🔁 Word count enforcement ONLY for non-random
+  //  Word count enforcement ONLY for non-random
   const wordCount = countWords(story);
   let min = 150,
     max = 200;
@@ -76,7 +81,7 @@ async function generateStory({ genres, styles, length, blurb, random = false, re
 
   if (wordCount < min || wordCount > max) {
     console.warn(
-      `⚠️ Story length ${wordCount} out of range (${min}-${max}). Retrying...`
+      ` Story length ${wordCount} out of range (${min}-${max}). Retrying...`
     );
     return generateStory({
       genres,
@@ -84,21 +89,21 @@ async function generateStory({ genres, styles, length, blurb, random = false, re
       length,
       blurb,
       random,
-      retryPrompt: `${finalPrompt}\n\nThe previous attempt was ${wordCount} words. Rewrite strictly within ${min}–${max} words.`,
+      retryPrompt: `${finalPrompt}\n\nThe previous attempt was ${wordCount} words. Rewrite strictly within ${min}–${max} words. Remember: only respond in valid JSON with "title" and "story".`,
     });
   }
 
   return { title, story };
 }
 
-//  Normal story route
+// Normal story route
 router.post("/generate-story", async (req, res) => {
   try {
     const { genres, styles, length, blurb } = req.body;
     const { title, story } = await generateStory({ genres, styles, length, blurb });
     res.json({ title, story });
   } catch (err) {
-    console.error("❌ Error generating story:", err.response?.data || err.message);
+    console.error(" Error generating story:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to generate story" });
   }
 });
@@ -109,7 +114,7 @@ router.get("/random-story", async (req, res) => {
     const { title, story } = await generateStory({ random: true });
     res.json({ title, story });
   } catch (err) {
-    console.error("❌ Error generating random story:", err.response?.data || err.message);
+    console.error(" Error generating random story:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to generate random story" });
   }
 });
