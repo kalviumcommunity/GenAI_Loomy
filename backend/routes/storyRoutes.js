@@ -34,7 +34,8 @@ async function generateStory({ genres, styles, length, blurb, random = false, re
         { role: "user", content: finalPrompt },
       ],
       max_tokens: 2000, //
-      temperature: random ? 1.2 : 0.7
+      temperature: random ? 1.2 : 0.7,
+       top_p: 0.95
     },
     {
       headers: {
