@@ -12,7 +12,7 @@ router.get("/cosine", (req, res) => {
 });
 router.get("/dot", (req, res) => {
   const vecA = [0.1, 0.2, 0.3];
-  const vecB = [0.1, 0.25, 0.35];
+  const vecB = [0.2, 0.25, 0.35];
 
   const result = dotProduct(vecA, vecB);
   res.json({ dotProduct: result });
