@@ -35,7 +35,8 @@ async function generateStory({ genres, styles, length, blurb, random = false, re
       ],
       max_tokens: 2000, //
       temperature: random ? 1.2 : 0.7,
-       top_p: 0.95
+       top_p: 0.95,
+       top_k: 40,
     },
     {
       headers: {
