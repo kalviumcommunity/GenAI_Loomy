@@ -4,7 +4,7 @@ const { cosineSimilarity,dotProduct,euclideanDistance } = require("../utils/simi
 const router = express.Router();
 
 router.get("/cosine", (req, res) => {
-  const vecA = [0.1, 0.2, 0.3];
+  const vecA = [0.2, 0.2, 0.3];
   const vecB = [0.1, 0.25, 0.35];
 
   const result = cosineSimilarity(vecA, vecB);
