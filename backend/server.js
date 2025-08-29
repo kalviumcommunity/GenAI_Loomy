@@ -5,6 +5,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const storyRoutes = require("./routes/storyRoutes");
+const similarityRoutes = require("./routes/similarityRoutes");
 
 const app = express();
 
@@ -14,6 +15,9 @@ app.use(bodyParser.json());
 
 // Routes
 app.use("/api", storyRoutes);
+
+
+app.use("/api/similarity", similarityRoutes);
 
 // Start server
 const PORT = process.env.PORT || 7008;
