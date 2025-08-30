@@ -6,6 +6,8 @@ require("dotenv").config();
 
 const storyRoutes = require("./routes/storyRoutes");
 const similarityRoutes = require("./routes/similarityRoutes");
+const embeddingRoutes = require("./routes/embeddingRoutes");
+
 
 const app = express();
 
@@ -15,9 +17,8 @@ app.use(bodyParser.json());
 
 // Routes
 app.use("/api", storyRoutes);
-
-
 app.use("/api/similarity", similarityRoutes);
+app.use("/api/embedding", embeddingRoutes);
 
 // Start server
 const PORT = process.env.PORT || 7008;
