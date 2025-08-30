@@ -5,32 +5,28 @@ const { buildRandomPrompt, buildNormalPrompt } = require("../utils/promptBuilder
 
 const router = express.Router();
 
-//  Word counter
+// Word counter helper
 function countWords(text) {
   return text.trim().split(/\s+/).length;
 }
 
-//  Loomy generator
+// Generate story
 async function generateStory({ genres, styles, length, blurb, random = false, retryPrompt = null }) {
-  let finalPrompt;
+  // Choose prompt
+  const finalPrompt = random
+    ? buildRandomPrompt() // JS function call
+    : retryPrompt || buildNormalPrompt({ genres, styles, length, blurb }); // JS function call
 
-  if (random) {
-    finalPrompt = buildRandomPrompt();
-  } else {
-    finalPrompt = retryPrompt || buildNormalPrompt({ genres, styles, length, blurb });
-  }
+  console.log(random ? "Using random prompt" : "Using normal prompt");
 
-  // 🔗 Call OpenRouter
+  // Call OpenRouter AI
   const response = await axios.post(
     "https://openrouter.ai/api/v1/chat/completions",
     {
       model: "gpt-4o-mini",
       messages: [
-        {
-          role: "system",
-          content: "You are Loomy, an imaginative and creative storyteller AI that must strictly obey user instructions.",
-        },
-        { role: "user", content: finalPrompt },
+        { role: "system", content: "You are Loomy, an imaginative storyteller AI." },
+        { role: "user", content: finalPrompt }
       ],
       max_tokens: 2000,
       temperature: random ? 1.2 : 0.7,
@@ -41,81 +37,119 @@ async function generateStory({ genres, styles, length, blurb, random = false, re
     {
       headers: {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "HTTP-Referer": "http://localhost:5173",
-        "X-Title": "Loomy Storyteller",
       },
     }
   );
 
   let rawText = response.data.choices[0].message.content.trim();
 
-  //  Parse JSON safely
+  // Parse JSON safely
   let parsed;
   try {
     parsed = JSON.parse(rawText);
   } catch (e) {
-    console.error(" Failed to parse JSON:", rawText);
+    console.error("Failed to parse JSON:", rawText);
     throw new Error("AI did not return valid JSON");
   }
 
   const title = parsed.title || "Untitled";
   const story = parsed.story || "";
 
-  console.log("📖 Generated Title:", title);
-  console.log("📝 Generated Story (first 300 chars):", story.slice(0, 300) + "...");
-
-  //  If random, just return directly (no word count checks)
   if (random) return { title, story };
 
-  //  Word count data evaluation
+  // Word count validation
   const wordCount = countWords(story);
-  let min = 150,
-    max = 200;
-  if (length === "medium") {
-    min = 450;
-    max = 550;
-  } else if (length === "long") {
-    min = 750;
-    max = 850;
-  }
+  let min = 150, max = 200;
+  if (length === "medium") { min = 450; max = 550; }
+  else if (length === "long") { min = 750; max = 850; }
 
   if (wordCount < min || wordCount > max) {
-    console.warn(
-      ` Story length ${wordCount} out of range (${min}-${max}). Retrying...`
-    );
+    console.warn(`Story length ${wordCount} out of range (${min}-${max}). Retrying...`);
     return generateStory({
-      genres,
-      styles,
-      length,
-      blurb,
-      random,
-      retryPrompt: `${finalPrompt}\n\nThe previous attempt was ${wordCount} words. Rewrite strictly within ${min}–${max} words. Remember: only respond in valid JSON with "title" and "story".`,
+      genres, styles, length, blurb, random,
+      retryPrompt: `${finalPrompt}\n\nThe previous attempt was ${wordCount} words. Rewrite strictly within ${min}–${max} words. Only respond in valid JSON with "title" and "story".`
     });
   }
 
   return { title, story };
 }
 
-// Normal story route
+// Routes
+
+// Normal story
 router.post("/generate-story", async (req, res) => {
   try {
     const { genres, styles, length, blurb } = req.body;
-    const { title, story } = await generateStory({ genres, styles, length, blurb });
-    res.json({ title, story });
+    const result = await generateStory({ genres, styles, length, blurb });
+    res.json(result);
   } catch (err) {
-    console.error(" Error generating story:", err.response?.data || err.message);
+    console.error("Error generating story:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to generate story" });
   }
 });
 
-//  Random story route
+// Random story
 router.get("/random-story", async (req, res) => {
   try {
-    const { title, story } = await generateStory({ random: true });
-    res.json({ title, story });
+    const result = await generateStory({ random: true });
+    res.json(result);
   } catch (err) {
-    console.error(" Error generating random story:", err.response?.data || err.message);
+    console.error("Error generating random story:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to generate random story" });
+  }
+});
+
+// LLM Function Call example
+router.post("/function-call-meta", async (req, res) => {
+  try {
+    const { storyText } = req.body;
+
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a story analyzer. Extract metadata from stories." },
+          { role: "user", content: storyText }
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "detectStoryMeta",
+              description: "Extract genre, style, and length info from a story",
+              parameters: {
+                type: "object",
+                properties: {
+                  genre: { type: "string" },
+                  style: { type: "string" },
+                  length: { type: "string" }
+                },
+                required: ["genre", "style", "length"]
+              }
+            }
+          }
+        ],
+        tool_choice: "auto"
+      },
+      {
+        headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` }
+      }
+    );
+
+    const toolCall = response.data.choices[0]?.message?.tool_calls?.[0];
+
+    if (toolCall) {
+      const args = JSON.parse(toolCall.function.arguments);
+      console.log("LLM function called:", toolCall.function.name, args);
+      return res.json({ toolUsed: toolCall.function.name, meta: args });
+    }
+
+    // fallback
+    res.json({ meta: { genre: "Unknown", style: "Unknown", length: "Unknown" } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Function call failed" });
   }
 });
 
