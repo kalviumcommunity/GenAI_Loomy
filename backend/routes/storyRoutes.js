@@ -67,7 +67,7 @@ async function generateStory({ genres, styles, length, blurb, random = false, re
   //  If random, just return directly (no word count checks)
   if (random) return { title, story };
 
-  //  Word count enforcement ONLY for non-random
+  //  Word count data evaluation
   const wordCount = countWords(story);
   let min = 150,
     max = 200;
