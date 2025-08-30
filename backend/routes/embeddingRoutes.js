@@ -5,7 +5,7 @@ const { cosineSimilarity } = require("../utils/similarity");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// 👉 fake in-memory "vector database"
+// in-memory "vector database"
 let vectorDB = [];
 
 // generate embedding
@@ -15,8 +15,7 @@ async function getEmbedding(text) {
   return result.embedding.values;
 }
 
-// 👉 Add text
-// 👉 Add text
+
 router.post("/add", async (req, res) => {
   try {
     const { text } = req.body;
@@ -35,7 +34,7 @@ router.post("/add", async (req, res) => {
 });
 
 
-// 👉 Search text
+//  Search text
 router.post("/search", async (req, res) => {
   try {
     const { query } = req.body;
@@ -58,7 +57,7 @@ router.post("/search", async (req, res) => {
   }
 });
 
-// 👉 Optional: clear/reset vectorDB
+//  Optional: clear/reset vectorDB
 router.post("/reset", (req, res) => {
   vectorDB = [];
   res.json({ success: true, message: "vectorDB cleared" });
